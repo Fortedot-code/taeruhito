@@ -1,0 +1,149 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="assets/css/style.css">
+  <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+  <script>
+    window.addEventListener("load", init);
+
+    function init() {
+
+      var music_flag = true;
+      var kokokara;
+      // 音声ファイルのパス、任意のIDを指定します。
+      createjs.Sound.registerSound("assets/sound/kokokara.mp3", "music01");
+      var img01 = new createjs.Bitmap("assets/img/normal.png");
+
+      // canvas全画面化設定
+      (function() {
+        var canvas = document.getElementById('canvas');
+        var container = document.getElementById('wrap');
+        sizing();
+
+        function sizing() {
+          canvas.height = container.offsetHeight;
+          canvas.width = container.offsetWidth;
+        }
+
+        window.addEventListener('resize', function() {
+          (!window.requestAnimationFrame) ? setTimeout(sizing, 300): window.requestAnimationFrame(sizing);
+        });
+      })();
+
+      // Stageオブジェクトを作成します
+      var stage = new createjs.Stage("canvas");
+
+      // タッチ操作をサポートしているブラウザーならば
+      if (createjs.Touch.isSupported() == true) {
+        // タッチ操作を有効にします。
+        createjs.Touch.enable(stage)
+      }
+
+      var obj01 = new createjs.Shape();
+      obj01.graphics.beginFill("LightBlue"); // 赤色で描画するように設定
+      obj01.graphics.moveTo(0, 0);
+      obj01.graphics.lineTo(0, 500);
+      obj01.graphics.lineTo(500, 0);
+      obj01.graphics.lineTo(0, 0);
+      stage.addChild(obj01); // 表示リストに追加
+
+      img01.x = 0;
+      img01.y = 0;
+      img01.scaleX = 800 / img01.getBounds().width;
+      img01.scaleY = img01.scaleX;
+      stage.addChild(img01);
+
+      // 加速度表示用テキスト
+      var t1 = new createjs.Text("x軸：", "24px serif", "DarkRed");
+      stage.addChild(t1);
+      t1.x = 100;
+      t1.y = 100;
+      var t2 = new createjs.Text("y軸：", "24px serif", "DarkRed");
+      stage.addChild(t2);
+      t2.x = 100;
+      t2.y = 150;
+      var t3 = new createjs.Text("z軸：", "24px serif", "DarkRed");
+      stage.addChild(t3);
+      t3.x = 100;
+      t3.y = 200;
+      var t4 = new createjs.Text("あ", "240px serif", "DarkRed");
+      stage.addChild(t4);
+      t4.x = 200;
+      t4.y = 400;
+
+      // 円を作成します
+      var shape = new createjs.Shape();
+      shape.graphics.beginFill("DarkRed").drawCircle(0, 0, 40); // 半径 100px の円を赤色で描画するように設定
+      stage.addChild(shape); // 表示リストに追加
+
+      // tick イベントを登録する
+      createjs.Ticker.addEventListener("tick", handleTick);
+
+      function handleTick(event) {
+        // シェイプをマウスに追随させる
+        shape.x = stage.mouseX;
+        shape.y = stage.mouseY;
+
+        if ((stage.mouseX + stage.mouseY) > 500 && music_flag){
+          // music start
+          kokokara = createjs.Sound.play("music01");
+          music_flag = false;
+
+          // pic shuffle
+          stage.removeChild(img01);
+          img01 = new createjs.Bitmap("assets/img/shuffle.png");
+          img01.x = 0;
+          img01.y = 0;
+          img01.scaleX = 800 / img01.getBounds().width;
+          img01.scaleY = img01.scaleX;
+          stage.addChild(img01);
+        }
+        if ((stage.mouseX + stage.mouseY) < 500 && !music_flag){
+          // music stop
+          kokokara.stop();
+          music_flag = true;
+
+          // pic normal
+          stage.removeChild(img01);
+          img01 = new createjs.Bitmap("assets/img/normal.png");
+          img01.x = 0;
+          img01.y = 0;
+          img01.scaleX = 800 / img01.getBounds().width;
+          img01.scaleY = img01.scaleX;
+          stage.addChild(img01);
+        }
+        // 画面を更新する
+        stage.update();
+      }
+
+      // 加速度を検知
+      // DeviceMotion Event
+      window.addEventListener('devicemotion', deviceMotionHandler);
+
+      // 加速度が変化
+      function deviceMotionHandler(event) {
+
+        // 加速度
+        // X軸
+        const x = event.acceleration.x;
+        t1.text = "x軸：" + x;
+        // Y軸
+        const y = event.acceleration.y;
+        t2.text = "y軸：" + y;
+        // Z軸
+        const z = event.acceleration.z;
+        t3.text = "z軸：" + z;
+
+        // 3軸加速度
+        acc = Math.round(Math.sqrt(x*x + y*y + z*z) * 10) / 10;
+        t4.text = acc
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="canvas" width="640" height="320"></canvas>
+  </div>
+</body>
+</html>
