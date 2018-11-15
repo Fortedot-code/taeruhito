@@ -3,16 +3,93 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" type="text/css" href="assets/css/style.css">
   <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+  <!-- <script defer src="js/acceleration.js"></script> -->
   <script>
     window.addEventListener("load", init);
 
     function init() {
 
+      // ----------------
+      // 変数定義
+      // ----------------
+      var ticker_count = 0;
       var music_flag = true;
-      var kokokara;
-      // 音声ファイルのパス、任意のIDを指定します。
-      createjs.Sound.registerSound("assets/sound/kokokara.mp3", "music01");
-      var img01 = new createjs.Bitmap("assets/img/normal.png");
+      var fight_music;
+
+      // 加速度センサ
+      var x_ac_val; // X軸
+      var y_ac_val; // Y軸
+      var z_ac_val; // Z軸
+
+      // ジャイロセンサ
+      var beta; // X軸
+      var gamma; // Y軸
+      var alpha; // Z軸
+
+
+      // ----------------
+      // データの読み込み
+      // ----------------
+
+      // sound
+      createjs.Sound.registerSound("assets/sound/fight.mp3", "music01");
+
+      // img/human
+      var pic01_normal01 = new createjs.Bitmap("assets/img/human/01_normal01.png");
+      var pic01_normal02 = new createjs.Bitmap("assets/img/human/01_normal02.png");
+      var pic02_headtap01 = new createjs.Bitmap("assets/img/human/02_headtap01.png");
+      var pic02_headtap02 = new createjs.Bitmap("assets/img/human/02_headtap02.png");
+      var pic03_bodytap01 = new createjs.Bitmap("assets/img/human/03_bodytap01.png");
+      var pic03_bodytap02 = new createjs.Bitmap("assets/img/human/03_bodytap02.png");
+      var pic04_foottap01 = new createjs.Bitmap("assets/img/human/04_foottap01.png");
+      var pic04_foottap02 = new createjs.Bitmap("assets/img/human/04_foottap02.png");
+      var pic05_side01 = new createjs.Bitmap("assets/img/human/05_side01.png");
+      var pic05_side02 = new createjs.Bitmap("assets/img/human/05_side02.png");
+      var pic06_footside01 = new createjs.Bitmap("assets/img/human/06_footside01.png");
+      var pic06_footside02 = new createjs.Bitmap("assets/img/human/06_footside02.png");
+      var pic07_30degree01 = new createjs.Bitmap("assets/img/human/07_30degree01.png");
+      var pic07_30degree02 = new createjs.Bitmap("assets/img/human/07_30degree02.png");
+      var pic08_45degree01 = new createjs.Bitmap("assets/img/human/08_45degree01.png");
+      var pic08_45degree02 = new createjs.Bitmap("assets/img/human/08_45degree02.png");
+      var pic09_upsidedown01 = new createjs.Bitmap("assets/img/human/09_upsidedown01.png");
+      var pic09_upsidedown02 = new createjs.Bitmap("assets/img/human/09_upsidedown02.png");
+      var pic10_tilttap01 = new createjs.Bitmap("assets/img/human/10_tilttap01.png");
+      var pic10_tilttap02 = new createjs.Bitmap("assets/img/human/10_tilttap02.png");
+      var pic11_tilttap01 = new createjs.Bitmap("assets/img/human/11_tilttap01.png");
+      var pic11_tilttap02 = new createjs.Bitmap("assets/img/human/11_tilttap02.png");
+      var pic12_shuffle01 = new createjs.Bitmap("assets/img/human/12_shuffle01.png");
+      var pic13_crack01 = new createjs.Bitmap("assets/img/human/13_crack01.png");
+      var pic13_crack02 = new createjs.Bitmap("assets/img/human/13_crack02.png");
+      var pic13_crack03 = new createjs.Bitmap("assets/img/human/13_crack03.png");
+      var pic13_crack04 = new createjs.Bitmap("assets/img/human/13_crack04.png");
+      var pic14_catch01 = new createjs.Bitmap("assets/img/human/14_catch01.png");
+      var pic15_detach01 = new createjs.Bitmap("assets/img/human/15_detach01.png");
+      var pic15_detach02 = new createjs.Bitmap("assets/img/human/15_detach02.png");
+      var pic15_detach03 = new createjs.Bitmap("assets/img/human/15_detach03.png");
+      var pic15_detach04 = new createjs.Bitmap("assets/img/human/15_detach04.png");
+      var pic15_detach05 = new createjs.Bitmap("assets/img/human/15_detach05.png");
+      var pic15_detach06 = new createjs.Bitmap("assets/img/human/15_detach06.png");
+      var pic15_detach07 = new createjs.Bitmap("assets/img/human/15_detach07.png");
+      var pic15_detachhead01 = new createjs.Bitmap("assets/img/human/15_detachhead01.png");
+      var pic16_jojo01 = new createjs.Bitmap("assets/img/human/16_jojo01.png");
+
+      // img/se
+      var se01_gogogo = new createjs.Bitmap("assets/img/se/se01_gogogo.png");
+      var se02_shu = new createjs.Bitmap("assets/img/se/se02_shu.png");
+      var se03_ton = new createjs.Bitmap("assets/img/se/se03_ton.png");
+      var se04_kura = new createjs.Bitmap("assets/img/se/se04_kura.png");
+      var se05_surprised = new createjs.Bitmap("assets/img/se/se05_surprised.png");
+      var se06_nyoki = new createjs.Bitmap("assets/img/se/se06_nyoki.png");
+      var se07_nyokinyoki = new createjs.Bitmap("assets/img/se/se07_nyokinyoki.png");
+      var se08_buchi = new createjs.Bitmap("assets/img/se/se08_buchi.png");
+
+
+
+
+
+      // ----------------
+      // 描画オブジェクト設定
+      // ----------------
 
       // canvas全画面化設定
       (function() {
@@ -40,43 +117,88 @@
       }
 
       var obj01 = new createjs.Shape();
-      obj01.graphics.beginFill("LightBlue"); // 赤色で描画するように設定
+      obj01.graphics.beginFill("LightBlue");
       obj01.graphics.moveTo(0, 0);
       obj01.graphics.lineTo(0, 500);
       obj01.graphics.lineTo(500, 0);
       obj01.graphics.lineTo(0, 0);
       stage.addChild(obj01); // 表示リストに追加
 
-      img01.x = 0;
-      img01.y = 0;
-      img01.scaleX = 800 / img01.getBounds().width;
-      img01.scaleY = img01.scaleX;
-      stage.addChild(img01);
+      var obj02 = new createjs.Shape();
+      obj02.graphics.beginFill("LightGreen"); // 赤色で描画するように設定
+      obj02.graphics.moveTo(Math.floor(canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5));
+      obj02.graphics.lineTo(Math.floor(canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5));
+      obj02.graphics.lineTo(Math.floor(2*canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5));
+      obj02.graphics.lineTo(Math.floor(2*canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5+canvas.width/3));
+      obj02.graphics.lineTo(Math.floor(canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5+canvas.width/3));
+      obj02.graphics.lineTo(Math.floor(canvas.width/3), Math.floor((canvas.height-canvas.width/3)*0.5));
+      stage.addChild(obj02); // 表示リストに追加
+
+      pic01_normal01.x = 0;
+      pic01_normal01.y = 0;
+      pic01_normal01.scaleX = 800 / pic01_normal01.getBounds().width;
+      pic01_normal01.scaleY = pic01_normal01.scaleX;
+      stage.addChild(pic01_normal01);
+
+      pic01_normal02.x = 0;
+      pic01_normal02.y = 0;
+      pic01_normal02.scaleX = 800 / pic01_normal02.getBounds().width;
+      pic01_normal02.scaleY = pic01_normal02.scaleX;
+
+      pic12_shuffle01.x = 0;
+      pic12_shuffle01.y = 0;
+      pic12_shuffle01.scaleX = 800 / pic12_shuffle01.getBounds().width;
+      pic12_shuffle01.scaleY = pic12_shuffle01.scaleX;
 
       // 加速度表示用テキスト
-      var t1 = new createjs.Text("x軸：", "24px serif", "DarkRed");
+      var t1 = new createjs.Text("ac_x軸：", "24px serif", "DarkRed");
       stage.addChild(t1);
       t1.x = 100;
       t1.y = 100;
-      var t2 = new createjs.Text("y軸：", "24px serif", "DarkRed");
+      var t2 = new createjs.Text("ac_y軸：", "24px serif", "DarkRed");
       stage.addChild(t2);
       t2.x = 100;
       t2.y = 150;
-      var t3 = new createjs.Text("z軸：", "24px serif", "DarkRed");
+      var t3 = new createjs.Text("ac_軸：", "24px serif", "DarkRed");
       stage.addChild(t3);
       t3.x = 100;
       t3.y = 200;
-      var t4 = new createjs.Text("あ", "240px serif", "DarkRed");
+      var t4 = new createjs.Text("加速向", "240px serif", "DarkRed");
       stage.addChild(t4);
-      t4.x = 200;
-      t4.y = 400;
+      t4.x = 400;
+      t4.y = 250;
+      var t5 = new createjs.Text("j_x軸：", "24px serif", "DarkRed");
+      stage.addChild(t5);
+      t5.x = 100;
+      t5.y = 250;
+      var t6 = new createjs.Text("j_y軸：", "24px serif", "DarkRed");
+      stage.addChild(t6);
+      t6.x = 100;
+      t6.y = 300;
+      var t7 = new createjs.Text("j_z軸：", "24px serif", "DarkRed");
+      stage.addChild(t7);
+      t7.x = 100;
+      t7.y = 350;
+      var t8 = new createjs.Text("幅："+canvas.width, "24px serif", "DarkRed");
+      stage.addChild(t8);
+      t8.x = 100;
+      t8.y = 400;
+      var t9 = new createjs.Text("高："+canvas.height, "24px serif", "DarkRed");
+      stage.addChild(t9);
+      t9.x = 100;
+      t9.y = 450;
 
       // 円を作成します
       var shape = new createjs.Shape();
       shape.graphics.beginFill("DarkRed").drawCircle(0, 0, 40); // 半径 100px の円を赤色で描画するように設定
       stage.addChild(shape); // 表示リストに追加
 
-      // tick イベントを登録する
+
+
+      // ----------------
+      // tick イベント
+      // ----------------
+
       createjs.Ticker.addEventListener("tick", handleTick);
 
       function handleTick(event) {
@@ -86,37 +208,63 @@
 
         if ((stage.mouseX + stage.mouseY) > 500 && music_flag){
           // music start
-          kokokara = createjs.Sound.play("music01");
+          fight_music = createjs.Sound.play("music01");
           music_flag = false;
 
           // pic shuffle
-          stage.removeChild(img01);
-          img01 = new createjs.Bitmap("assets/img/shuffle.png");
-          img01.x = 0;
-          img01.y = 0;
-          img01.scaleX = 800 / img01.getBounds().width;
-          img01.scaleY = img01.scaleX;
-          stage.addChild(img01);
+          stage.removeChild(pic01_normal01);
+          stage.addChild(pic12_shuffle01);
         }
         if ((stage.mouseX + stage.mouseY) < 500 && !music_flag){
           // music stop
-          kokokara.stop();
+          fight_music.stop();
           music_flag = true;
 
           // pic normal
-          stage.removeChild(img01);
-          img01 = new createjs.Bitmap("assets/img/normal.png");
-          img01.x = 0;
-          img01.y = 0;
-          img01.scaleX = 800 / img01.getBounds().width;
-          img01.scaleY = img01.scaleX;
-          stage.addChild(img01);
+          stage.removeChild(pic12_shuffle01);
+          stage.addChild(pic01_normal01);
         }
+
+        // あたり判定
+        // 星からみた相対座標に変換する
+        var point = obj02.globalToLocal(stage.mouseX, stage.mouseY);
+        // 星とドットがあたっているかを調べる
+        var isHit = obj02.hitTest(point.x, point.y);
+        // あたっていれば
+        if (isHit == true) {
+          shape.graphics.beginFill("Black").drawCircle(0, 0, 40);
+        } else {
+          shape.graphics.beginFill("DarkRed").drawCircle(0, 0, 40);
+        }
+
+        // アニメーション
+        ticker_count++;
+        if(ticker_count==20){
+          stage.removeChild(pic01_normal01);
+          stage.addChild(pic01_normal02);
+        }else if (ticker_count==40) {
+          stage.removeChild(pic01_normal02);
+          stage.addChild(pic01_normal01);
+          ticker_count=0;
+        }
+
+        // debug
+        t1.text = "ac_x軸：" + x_ac_val;
+        t2.text = "ac_y軸：" + y_ac_val;
+        t3.text = "ac_z軸：" + z_ac_val;
+        t5.text = "j_x軸：" + beta;
+        t6.text = "j_y軸：" + gamma;
+        t7.text = "j_z軸：" + alpha;
+
         // 画面を更新する
         stage.update();
       }
 
+
+
+      // ----------------
       // 加速度を検知
+      // ----------------
       // DeviceMotion Event
       window.addEventListener('devicemotion', deviceMotionHandler);
 
@@ -125,18 +273,54 @@
 
         // 加速度
         // X軸
-        const x = event.acceleration.x;
-        t1.text = "x軸：" + x;
+        x_ac_val = event.acceleration.x;
         // Y軸
-        const y = event.acceleration.y;
-        t2.text = "y軸：" + y;
+        y_ac_val = event.acceleration.y;
         // Z軸
-        const z = event.acceleration.z;
-        t3.text = "z軸：" + z;
+        z_ac_val = event.acceleration.z;
+
 
         // 3軸加速度
-        acc = Math.round(Math.sqrt(x*x + y*y + z*z) * 10) / 10;
-        t4.text = acc
+        // acc = Math.round(Math.sqrt(x*x + y*y + z*z) * 10) / 10;
+        // t4.text = acc
+
+        const bound = 7;
+        if (x_ac_val > bound) { // 右
+          t4.text = '右';
+        }
+        else if (x_ac_val < -bound) { // 左
+          t4.text = '左';
+        }
+        else if (y_ac_val > bound) { // 上
+          t4.text = '上';
+        }
+        else if (y_ac_val < -bound) { // 下
+          t4.text = '下';
+        }
+      }
+
+
+
+      // ----------------
+      // ジャイロ取得
+      // ----------------
+
+      window.addEventListener(
+        'deviceorientation',
+        deviceOrientationHandler);
+
+      /** デバイスが傾いたときのイベントです。 */
+      function deviceOrientationHandler(event) {
+        //ジャイロセンサー情報取得
+        // X軸
+        beta = event.beta;
+        // Y軸
+        gamma = event.gamma;
+        // Z軸
+        alpha = event.alpha;
+
+        // グラフィックを傾ける
+        // img01.style.transform = `rotateX(${beta + 180}deg) rotateY(${gamma + 180}deg) rotateZ(${alpha}deg)`;
       }
     }
   </script>
